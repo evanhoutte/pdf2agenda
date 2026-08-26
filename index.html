@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2933">
+<title>pdf2agenda</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="stylesheet" href="./styles.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+<header class="barre">
+  <h1>pdf2agenda</h1>
+  <div class="barre-actions">
+    <span id="etatCompte" class="pastille" data-etat="hors">hors ligne</span>
+    <button id="btnReglages" class="icone" title="Réglages" aria-label="Réglages">⚙</button>
+  </div>
+</header>
+
+<main>
+  <p id="alerteReglages" class="encart avertissement" hidden>
+    <strong>Réglages incomplets.</strong>
+    <span id="alerteDetail"></span>
+    <button id="btnOuvrirReglages" class="lien">Ouvrir les réglages</button>
+  </p>
+
+  <section id="zoneDepot" class="depot" tabindex="0" role="button"
+           aria-label="Déposer un PDF de planning">
+    <div class="depot-contenu">
+      <span class="depot-icone" aria-hidden="true">📄</span>
+      <p><strong>Dépose le PDF du planning</strong></p>
+      <p class="discret">ou clique pour le choisir — il ne quitte pas cet appareil</p>
+    </div>
+    <input type="file" id="fichier" accept="application/pdf,.pdf" hidden>
+  </section>
+
+  <p id="message" class="encart" hidden></p>
+
+  <section id="resultat" hidden>
+    <div class="entete-resultat">
+      <div>
+        <h2 id="titrePlanning"></h2>
+        <p class="discret" id="sousTitrePlanning"></p>
+      </div>
+      <div class="entete-boutons">
+        <button id="btnCopier" title="Copier la synthèse en texte">Copier la synthèse</button>
+        <button id="btnFermer" class="lien">Changer de PDF</button>
+      </div>
+    </div>
+
+    <div class="tableau-enveloppe">
+      <table id="tablePlanning">
+        <thead><tr><th>Jour</th><th>Code</th><th>Créneau</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p id="codesManquants" class="encart erreur" hidden></p>
+
+    <div class="actions">
+      <button id="btnApercu" class="principal">Comparer à l'agenda</button>
+      <button id="btnRevert" class="danger">Annuler cet import</button>
+    </div>
+
+    <div id="plan" hidden>
+      <h3>Synchronisation</h3>
+      <div id="planListe"></div>
+      <div class="actions">
+        <button id="btnAppliquer" class="principal">Appliquer</button>
+        <button id="btnAnnulerPlan" class="lien">Annuler</button>
+      </div>
+      <progress id="progression" hidden value="0" max="1"></progress>
+    </div>
+  </section>
+</main>
+
+<dialog id="reglages">
+  <form method="dialog" class="reglages-form">
+    <header class="reglages-entete">
+      <h2>Réglages</h2>
+      <button value="fermer" class="icone" aria-label="Fermer">✕</button>
+    </header>
+
+    <div class="reglages-corps">
+      <fieldset>
+        <legend>Compte Google</legend>
+        <label>Identifiant client OAuth
+          <input type="text" id="rClientId" placeholder="…apps.googleusercontent.com"
+                 autocomplete="off" spellcheck="false">
+        </label>
+        <p class="aide">Client de type <em>Application Web</em>, avec cette page
+          déclarée dans les origines JavaScript autorisées. Il est public par
+          conception&nbsp;; ne colle jamais un <em>client secret</em> ici.</p>
+        <div class="ligne-boutons">
+          <button type="button" id="btnConnecter">Se connecter</button>
+          <button type="button" id="btnDeconnecter" class="lien">Se déconnecter</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Destination</legend>
+        <label>Agenda
+          <select id="rCalendrier"><option value="">— non choisi —</option></select>
+        </label>
+        <button type="button" id="btnChargerAgendas" class="lien">Charger mes agendas</button>
+        <label>Personne
+          <input type="text" id="rPersonne" list="listePersonnes"
+                 placeholder="NOM PRENOM, tel qu'écrit dans le PDF">
+          <datalist id="listePersonnes"></datalist>
+        </label>
+        <p class="aide" id="aidePersonne">Dépose un PDF pour choisir dans la liste des noms qu'il contient.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Événements</legend>
+        <div class="grille-2">
+          <label>Préfixe du titre
+            <input type="text" id="rTag" placeholder="ex. PLANNING">
+          </label>
+          <label>Couleur
+            <select id="rCouleur"></select>
+          </label>
+          <label>Fuseau horaire
+            <input type="text" id="rFuseau" spellcheck="false">
+          </label>
+        </div>
+        <label class="case">
+          <input type="checkbox" id="rJoursOff">
+          Créer un événement « journée entière » les jours non travaillés
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Règle des postes</legend>
+        <p class="aide">S'applique aux codes « chiffres + lettre facultative ».
+          C'est le <strong>dernier chiffre</strong> qui donne le créneau. Une fin
+          antérieure au début signifie que le créneau passe minuit.</p>
+        <table class="editeur"><thead>
+          <tr><th>Dernier chiffre</th><th>Début</th><th>Fin</th><th>Libellé</th><th></th></tr>
+        </thead><tbody id="corpsPostes"></tbody></table>
+        <button type="button" id="btnAjoutPoste" class="lien">+ ajouter</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Codes particuliers</legend>
+        <p class="aide">Priment sur la règle ci-dessus. Coche « repos » pour un
+          jour non travaillé.</p>
+        <table class="editeur"><thead>
+          <tr><th>Code</th><th>Début</th><th>Fin</th><th>Repos</th><th>Libellé</th><th></th></tr>
+        </thead><tbody id="corpsCodes"></tbody></table>
+        <button type="button" id="btnAjoutCode" class="lien">+ ajouter</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Reprise d'une version antérieure</legend>
+        <label>Préfixe des marques héritées
+          <input type="text" id="rHeritage" placeholder="laisser vide si sans objet"
+                 autocomplete="off" spellcheck="false">
+        </label>
+        <p class="aide">Si des créneaux ont déjà été posés par une version
+          précédente du programme, indique ici son préfixe : ses événements
+          seront repris en place au lieu d'être dupliqués.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Sauvegarde</legend>
+        <p class="aide">Les réglages vivent dans ce navigateur uniquement.
+          Exporte-les pour les transférer sur un autre appareil.</p>
+        <div class="ligne-boutons">
+          <button type="button" id="btnExporter">Exporter…</button>
+          <button type="button" id="btnImporter">Importer…</button>
+          <button type="button" id="btnReset" class="danger">Tout effacer</button>
+        </div>
+        <input type="file" id="fichierImport" accept="application/json,.json" hidden>
+      </fieldset>
+    </div>
+
+    <footer class="reglages-pied">
+      <span id="messageReglages" class="discret"></span>
+      <button type="button" id="btnEnregistrer" class="principal">Enregistrer</button>
+    </footer>
+  </form>
+</dialog>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

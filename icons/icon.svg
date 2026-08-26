@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="pdf2agenda">
+  <rect width="512" height="512" rx="113" fill="#1f2933"/>
+  <rect x="82" y="82" width="226" height="348" rx="23" fill="#f6f7f9"/>
+  <path d="M82 105a23 23 0 0 1 23-23h180a23 23 0 0 1 23 23v49H82z" fill="#2f6feb"/>
+  <g fill="#96a0ac">
+    <rect x="114" y="200" width="163" height="11" rx="5.5"/>
+    <rect x="114" y="252" width="118" height="11" rx="5.5"/>
+    <rect x="114" y="304" width="163" height="11" rx="5.5"/>
+    <rect x="114" y="356" width="118" height="11" rx="5.5"/>
+  </g>
+  <g fill="#56c98a">
+    <rect x="285" y="248" width="117" height="16" rx="8"/>
+    <path d="M430 256l-44-32v64z"/>
+  </g>
+</svg>

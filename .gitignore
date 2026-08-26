@@ -1,0 +1,4 @@
+# Aucune donnée personnelle ne doit entrer ici.
+*.pdf
+*-reglages.json
+node_modules/
