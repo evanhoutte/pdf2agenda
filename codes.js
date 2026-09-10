@@ -3,13 +3,18 @@
  *
  * Deux mécanismes, dans cet ordre :
  *   1. `codes`  — cas particuliers, correspondance exacte du code ;
- *   2. `postes` — règle générale pour les codes « N chiffres + lettre
- *      facultative », indexée sur le DERNIER chiffre.
+ *   2. `postes` — règle générale pour les codes « 3 chiffres + suffixe de
+ *      variante facultatif », indexée sur le TROISIÈME chiffre.
  * Un « * » final est toujours retiré avant recherche.
  */
 
 const RE_HEURE = /^(\d{1,2}):(\d{2})$/;
-const RE_POSTE = /^\d*(\d)[A-Z]?$/;
+// Codes de poste : exactement trois chiffres, suivis d'un suffixe de variante
+// facultatif (601, 121D, 422B, 603MB, 902FD). Seul le TROISIÈME chiffre porte
+// l'horaire ; les deux premiers et le suffixe n'ont aucune incidence. Le
+// nombre de chiffres est fixe à dessein : le créneau se lit à une position,
+// donc un code de longueur inattendue doit échouer plutôt que d'être deviné.
+const RE_POSTE = /^\d\d(\d)[A-Z]*$/;
 
 export class ErreurCodes extends Error {}
 

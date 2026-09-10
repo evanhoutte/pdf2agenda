@@ -69,10 +69,12 @@ messagerie vers pdf2agenda**.
 
 ## Table des codes
 
-**Règle des postes** — s'applique aux codes « chiffres + lettre facultative »
-(`601`, `121D`, `422B`, `601D*`). C'est le **dernier chiffre** qui détermine le
-créneau ; les chiffres de tête et la lettre n'ont aucune incidence horaire. Un
-`*` final est ignoré.
+**Règle des postes** — s'applique aux codes « 3 chiffres + suffixe facultatif »
+(`601`, `121D`, `422B`, `603MB`, `902FD`, `601D*`). C'est le **troisième
+chiffre** qui détermine le créneau ; les deux premiers et le suffixe de variante
+— quelle que soit sa longueur — n'ont aucune incidence horaire. Un `*` final est
+ignoré. Un code qui ne suit pas cette forme (`D01`, `F03`, quatre chiffres…)
+n'est jamais interprété : il bloque la synchronisation.
 
 **Codes particuliers** — priment sur la règle. Coche *repos* pour un jour non
 travaillé (aucun événement créé, sauf si tu actives les journées entières).

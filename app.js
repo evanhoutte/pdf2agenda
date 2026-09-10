@@ -222,9 +222,11 @@ function ligneEditeur(champs, valeurs, onSuppr) {
   return tr;
 }
 
+// Placeholders : de simples exemples de forme, sans rapport avec une table
+// réelle — celle-ci vit dans le navigateur de l'utilisateur, jamais ici.
 const CHAMPS_POSTE = [
-  { cle: 'chiffre', placeholder: '1' }, { cle: 'debut', placeholder: '04:00' },
-  { cle: 'fin', placeholder: '12:00' }, { cle: 'libelle', placeholder: 'Matin' },
+  { cle: 'chiffre', placeholder: '1' }, { cle: 'debut', placeholder: '06:00' },
+  { cle: 'fin', placeholder: '14:00' }, { cle: 'libelle', placeholder: 'Tour 1' },
 ];
 const CHAMPS_CODE = [
   { cle: 'code', placeholder: 'ABC' }, { cle: 'debut', placeholder: '08:00' },

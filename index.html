@@ -136,11 +136,13 @@
 
       <fieldset>
         <legend>Règle des postes</legend>
-        <p class="aide">S'applique aux codes « chiffres + lettre facultative ».
-          C'est le <strong>dernier chiffre</strong> qui donne le créneau. Une fin
-          antérieure au début signifie que le créneau passe minuit.</p>
+        <p class="aide">S'applique aux codes « 3 chiffres + suffixe facultatif ».
+          C'est le <strong>troisième chiffre</strong> qui donne le créneau ; les
+          deux premiers et le suffixe (<code>D</code>, <code>MB</code>,
+          <code>FD</code>…) n'ont aucune incidence horaire. Une fin antérieure au
+          début signifie que le créneau passe minuit.</p>
         <table class="editeur"><thead>
-          <tr><th>Dernier chiffre</th><th>Début</th><th>Fin</th><th>Libellé</th><th></th></tr>
+          <tr><th>Tour (3ᵉ chiffre)</th><th>Début</th><th>Fin</th><th>Libellé</th><th></th></tr>
         </thead><tbody id="corpsPostes"></tbody></table>
         <button type="button" id="btnAjoutPoste" class="lien">+ ajouter</button>
       </fieldset>

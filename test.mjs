@@ -58,10 +58,14 @@ const config = {
   fuseau: 'Europe/Paris', joursOffEnJourneeEntiere: false,
   heritagePrefixe: 'ancien',
 };
+// Horaires volontairement fictifs : ils exercent la règle (quatre tours, dont
+// deux partageant un même créneau qui passe minuit) sans reproduire aucune
+// table de codes réelle.
 const table = new TableCodes({
-  postes: { 0: { debut: '20:00', fin: '04:00', libelle: 'Nuit' },
-            1: { debut: '04:00', fin: '12:00', libelle: 'Matin' },
-            2: { debut: '12:00', fin: '20:00', libelle: 'Après-midi' } },
+  postes: { 1: { debut: '06:00', fin: '14:00', libelle: 'Tour 1' },
+            2: { debut: '14:00', fin: '22:00', libelle: 'Tour 2' },
+            3: { debut: '22:00', fin: '06:00', libelle: 'Tour 3' },
+            4: { debut: '22:00', fin: '06:00', libelle: 'Tour 4' } },
   codes: { OFF: { off: true, libelle: 'Repos' } },
 });
 const planning = {
@@ -69,7 +73,7 @@ const planning = {
   debut: '2030-01-01', fin: '2030-01-05',
   jours: [
     { date: '2030-01-01', code: '101' }, { date: '2030-01-02', code: '202' },
-    { date: '2030-01-03', code: 'OFF' }, { date: '2030-01-04', code: '320' },
+    { date: '2030-01-03', code: 'OFF' }, { date: '2030-01-04', code: '323MB' },
     { date: '2030-01-05', code: '101' },
   ],
 };
@@ -88,14 +92,37 @@ const verifie = (nom, reel, attendu) => {
 
 await gcal.autoriser('faux-client-id');
 
+// 0. Règle des postes : c'est le TROISIÈME chiffre qui porte l'horaire, quel
+//    que soit le suffixe de variante. Les codes qui ne sont pas « 3 chiffres
+//    + lettres » ne doivent surtout pas être devinés.
+const creneau = (code) => {
+  const c = table.resoudre(code);
+  return c === null ? null : (c.off ? 'off' : `${c.debut}-${c.fin}${c.lendemain ? '+1' : ''}`);
+};
+for (const [code, attendu] of [
+  ['101', '06:00-14:00'],          // sans suffixe
+  ['121D', '06:00-14:00'],         // suffixe d'une lettre
+  ['422B', '14:00-22:00'],
+  ['323MB', '22:00-06:00+1'],        // suffixe de deux lettres
+  ['902FD', '14:00-22:00'],
+  ['101*', '06:00-14:00'],         // « * » final ignoré
+  ['124', '22:00-06:00+1'],          // tours 3 et 4 : deux nuits, même horaire
+  ['D01', null],                   // commence par une lettre : pas un poste
+  ['F03', null],
+  ['1012', null],                  // quatre chiffres : position ambiguë
+  ['ABSA', null],
+]) {
+  verifie(`poste ${code}`, creneau(code), attendu);
+}
+
 // 1. Agenda vide : 4 jours travaillés sur 5
 let actions = await gcal.preparer(planning, config, table, 'test.pdf');
 verifie('agenda vide', compte(actions), { creer: 4 });
 
 // 2. Le poste de nuit se termine bien le lendemain
-const nuit = actions.find((a) => a.code === '320').corps;
+const nuit = actions.find((a) => a.code === '323MB').corps;
 verifie('poste de nuit', [nuit.start.dateTime, nuit.end.dateTime, nuit.start.timeZone],
-        ['2030-01-04T20:00:00', '2030-01-05T04:00:00', 'Europe/Paris']);
+        ['2030-01-04T22:00:00', '2030-01-05T06:00:00', 'Europe/Paris']);
 
 // 3. Application, puis resynchronisation : rien à faire
 await gcal.appliquer(actions, config);
@@ -116,7 +143,7 @@ actions = await gcal.preparer(repos, config, table, 'test.pdf');
 verifie('jour passé en repos', compte(actions), { inchange: 3, supprimer: 1 });
 
 // 6. Un créneau hors période (quinzaine suivante) ne doit jamais être touché
-agenda.set('ev_hors', { id: 'ev_hors', summary: 'TAG 101 — Matin',
+agenda.set('ev_hors', { id: 'ev_hors', summary: 'TAG 101 — Tour 1',
   extendedProperties: { private: { pdf2agenda: '1',
     p2a_personne: gcal.slug(planning.personne), p2a_date: '2030-01-06',
     p2a_code: '101', p2a_sig: 'x' } } });
@@ -125,7 +152,7 @@ verifie('hors période préservé', compte(actions), { inchange: 4 });
 
 // 7. Événement hérité de la version Python doublonnant un créneau déjà posé :
 //    l'actuel est conservé, l'hérité retiré — pas de doublon dans l'agenda.
-const herite = (date) => ({ id: `ev_herite_${date}`, summary: 'ANCIEN 101 — Matin',
+const herite = (date) => ({ id: `ev_herite_${date}`, summary: 'ANCIEN 101 — Tour 1',
   extendedProperties: { private: { ancien2planning: '1',
     ancien_personne: gcal.slug(planning.personne), ancien_date: date,
     ancien_code: '101' } } });
