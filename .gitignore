@@ -1,4 +1,6 @@
 # Aucune donnée personnelle ne doit entrer ici.
 *.pdf
-*-reglages.json
+# Motif large à dessein : « *-reglages.json » laissait passer les copies
+# renommées (pdf2agenda-reglages-erik.json…), qui portent le même contenu.
+*reglages*.json
 node_modules/
